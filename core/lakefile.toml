@@ -21,3 +21,7 @@ root = "Main"
 [[lean_exe]]
 name = "loot_emit"
 root = "Emit"
+
+[[lean_exe]]
+name = "r128_diff"
+root = "R128Diff"

@@ -5,3 +5,6 @@ adapters/parity/volk.*
 adapters/parity/parity_runner
 adapters/parity/kernel.spv
 .venv/
+
+adapters/r128-parity/r128.h
+adapters/r128-parity/r128_oracle

@@ -67,6 +67,14 @@ podman run --rm loot-parity                # runs the parity on lavapipe
 CI (`.github/workflows/parity.yml`) runs the parity on lavapipe (Linux) and on
 MoltenVK (macOS).
 
+## Host r128 parity
+
+`core/LootCore/R128.lean` ports the vendored `r128` (Q64.64, fahickman/r128) over
+`UInt64` limbs, bit-faithful to its STDC path including the round-to-nearest
+multiply. `adapters/r128-parity` differential-tests it against the real `r128.c`:
+**8,200 vectors x 7 ops (add/sub/neg/mul/cmp/shl/shr), zero mismatches.** The same
+algorithm lowers to a uint32-limb SPIR-V kernel (the GPU path) — next step.
+
 ## Note on uint64
 
 `lean-slang`'s `Scalar` has no `uint64`, so the kernel and the core both run a

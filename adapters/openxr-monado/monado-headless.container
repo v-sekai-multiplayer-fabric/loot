@@ -1,0 +1,18 @@
+[Unit]
+Description=Headless Monado OpenXR runtime (null compositor + simulated HMD)
+Documentation=https://v-sekai-multiplayer-fabric.github.io/manuals/decisions/20260612-headless-openxr-testing-with-monado.html
+
+[Container]
+ContainerName=monado-headless
+Image=localhost/monado-headless
+Environment=XDG_RUNTIME_DIR=/run/monado
+# Expose the OpenXR IPC socket on the host runtime dir so apps can connect at
+# $XDG_RUNTIME_DIR/monado/monado_comp_ipc.
+Volume=%t/monado:/run/monado:z
+
+[Service]
+Restart=always
+TimeoutStartSec=60
+
+[Install]
+WantedBy=default.target

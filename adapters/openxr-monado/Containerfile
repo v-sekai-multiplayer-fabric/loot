@@ -1,0 +1,15 @@
+# Headless Monado OpenXR runtime for CI: null compositor + simulated HMD on
+# lavapipe (software Vulkan), no display, no GPU passthrough, no extra caps.
+FROM fedora:44
+RUN dnf -y install monado monado-vulkan-layers mesa-vulkan-drivers vulkan-loader libcap procps-ng \
+    && dnf clean all
+# Drop the cap_sys_nice file capability so the binary execs under default rootless
+# security; the null-compositor CI path does not need realtime thread priority.
+RUN setcap -r /usr/bin/monado-service || true
+RUN mkdir -p /etc/xdg/openxr/1 /run/monado \
+    && ln -sf /usr/share/openxr/1/openxr_monado.json /etc/xdg/openxr/1/active_runtime.json
+ENV XDG_RUNTIME_DIR=/run/monado \
+    XRT_COMPOSITOR_NULL=1 \
+    SIMULATED_ENABLE=1 \
+    VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
+CMD ["bash","-lc","tail -f /dev/null | monado-service"]

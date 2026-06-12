@@ -1,7 +1,9 @@
 # r128 GPU parity adapter
 
-`r128_mul.slang` is a 1:1 transcription of `core/LootCore/R128L` (the uint32-limb
-Q64.64 multiply, proven bit-exact to the host r128). It compiles to SPIR-V and runs
+`r128_mul.slang` is **emitted from Lean** by `core/LootCore/R128Slang.lean` through
+lean-slang (regenerate with `cd ../../core && lake exe r128_slang_emit`). It is the
+uint32-limb Q64.64 multiply of `core/LootCore/R128L`, proven bit-exact to the host
+r128. It compiles to SPIR-V and runs
 on Vulkan; `r128_gpu_parity.c` links the host `r128.c`, generates random pairs,
 multiplies them on the CPU and the GPU, and asserts the limbs match.
 

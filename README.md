@@ -72,7 +72,7 @@ MoltenVK (macOS).
 The 32-bit placeholder is gone. `core/LootCore/R128L.lean` is the Q64.64 r128
 multiply over **uint32 limbs** (no uint64; `mulhi` via a 16-bit split), proven
 equal to the `UInt64` `R128` (Plausible + 50,000 sweep), which is proven equal to
-the host `r128.c` (8,200 vectors x 7 ops). `adapters/r128-gpu/r128_mul.slang` is a
-1:1 transcription that lowers to SPIR-V; `adapters/r128-gpu` dispatches it on
+the host `r128.c` (8,200 vectors x 7 ops). `adapters/r128-gpu/r128_mul.slang` is **emitted from Lean** by
+`core/LootCore/R128Slang.lean` through lean-slang and lowers to SPIR-V; `adapters/r128-gpu` dispatches it on
 Vulkan via volk and checks against `r128.c`: **R128 GPU PARITY PASS on 4,096
 multiplies.** Host and GPU r128 agree bit-for-bit.

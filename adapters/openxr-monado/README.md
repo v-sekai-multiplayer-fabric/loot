@@ -26,3 +26,14 @@ OpenXR app's `XDG_RUNTIME_DIR` there (or run it in the same pod) to connect.
 
 Scope: functional and integration coverage of the OpenXR path. The standalone
 Quest 3 build stays the performance and comfort gate.
+
+## Godot integration smoke
+
+With Monado running, confirm a Godot build's OpenXR session comes up against it:
+
+```sh
+GODOT=/path/to/godot ./godot-xr-smoke.sh   # needs xvfb-run; prints XRSMOKE: RESULT initialized=true
+```
+
+Verified: Godot 4.7.beta initialized OpenXR on the Monado runtime, creating an XR
+session on the workstation's Vulkan device, headless under Xvfb.

@@ -1,13 +1,9 @@
 extends SceneTree
-# Four-player first-touch contention, server-authoritative: collects the four
-# requests of each round, resolves with the LootCore.resolve algorithm
-# (earliest receipt, ties to the lowest requester id), replies the winner to
-# every requester.
-const BASE_PORT = 54372
+# Post-fix: one listener, four sessions, per-session replies via set_target_peer.
+const PORT = 54373
 const ROUNDS = 64
-var peers := []    # one server endpoint per player (multi-session-per-listener
-                   # crashes the http3 module; single authority, four endpoints)
-var rounds := {}   # round -> Array of [requester, ts, endpoint_index]
+var peer: WebTransportPeer
+var rounds := {}    # round -> [[requester, ts, transport_peer_id], ...]
 var resolved := {}
 
 static func _fmt(t: int) -> String:
@@ -20,28 +16,29 @@ func _init():
 	var now = int(Time.get_unix_time_from_system())
 	var cert = crypto.generate_self_signed_certificate_san(key, "CN=contention-zone",
 		_fmt(now), _fmt(now + 86400), PackedStringArray(["DNS:localhost", "IP:127.0.0.1"]))
-	var p = WebTransportPeer.new()
-	if p.create_server(BASE_PORT, "/wt", cert, key) != OK:
+	peer = WebTransportPeer.new()
+	if peer.create_server(PORT, "/wt", cert, key) != OK:
 		printerr("create_server failed"); quit(1); return
-	peers.append(p)
-	print("CONTSRV ready on ", BASE_PORT)
+	print("CONTSRV ready on ", PORT)
 
 func _process(_d: float) -> bool:
-	if peers.is_empty(): return false
-	var p = peers[0]
-	p.poll()
-	while p.get_available_packet_count() > 0:
-		var parts = p.get_packet().get_string_from_utf8().split(":")
+	if not peer: return false
+	peer.poll()
+	while peer.get_available_packet_count() > 0:
+		var parts = peer.get_packet().get_string_from_utf8().split(":")
+		var from = peer.get_packet_peer()
 		var rnd := int(parts[0]); var req := int(parts[1]); var ts := int(parts[2])
 		if not rounds.has(rnd): rounds[rnd] = []
-		rounds[rnd].append([req, ts])
+		rounds[rnd].append([req, ts, from])
 		if rounds[rnd].size() == 4 and not resolved.has(rnd):
 			resolved[rnd] = true
 			var best = rounds[rnd][0]
 			for r in rounds[rnd]:
 				if r[1] < best[1] or (r[1] == best[1] and r[0] < best[0]):
 					best = r
-			print("RESOLVED %d:%d" % [rnd, best[0]])
+			for r in rounds[rnd]:
+				peer.set_target_peer(r[2])
+				peer.put_packet(("%d:%d" % [rnd, best[0]]).to_utf8_buffer())
 			if resolved.size() == ROUNDS:
-				print("CONTSRV done: ", ROUNDS, " rounds resolved")
+				print("CONTSRV done")
 	return false

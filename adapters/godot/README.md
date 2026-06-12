@@ -32,10 +32,9 @@ and its resolutions match `contention_golden.csv` (emitted by the Lean core and
 pinned by the Plausible four-player property: exactly one winner, earliest
 receipt, ties to the lowest requester id).
 
-Verified: FOUR-PLAYER CONTENTION PASS, 64 rounds, 4 concurrent clients.
-
-Engine findings filed from this smoke (the `feat/module-http3` listener):
-one server listener per process; with multiple sessions on one listener,
-incoming datagrams multiplex correctly but replies route to a single session,
-and session teardown hits a double free. The smoke verifies the authority's
-resolutions at the harness until the reply path lands.
+Verified post-fix: every client receives its own 64 winner announcements over
+its own session (`set_target_peer` unicast), and the server stays healthy
+through all four teardowns. The multi-session fix is
+[godot#56](https://github.com/v-sekai-multiplayer-fabric/godot/pull/56),
+pattern-matched from `fire/webtransportd@f0fc9a4`; the one-listener-per-process
+limit stands.

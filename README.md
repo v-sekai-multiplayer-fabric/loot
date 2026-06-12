@@ -67,16 +67,12 @@ podman run --rm loot-parity                # runs the parity on lavapipe
 CI (`.github/workflows/parity.yml`) runs the parity on lavapipe (Linux) and on
 MoltenVK (macOS).
 
-## Host r128 parity
+## GPU r128 parity
 
-`core/LootCore/R128.lean` ports the vendored `r128` (Q64.64, fahickman/r128) over
-`UInt64` limbs, bit-faithful to its STDC path including the round-to-nearest
-multiply. `adapters/r128-parity` differential-tests it against the real `r128.c`:
-**8,200 vectors x 7 ops (add/sub/neg/mul/cmp/shl/shr), zero mismatches.** The same
-algorithm lowers to a uint32-limb SPIR-V kernel (the GPU path) — next step.
-
-## Note on uint64
-
-`lean-slang`'s `Scalar` has no `uint64`, so the kernel and the core both run a
-32-bit xorshift to stay bit-exact. Matching the host r128 / 64-bit path needs a
-uint64 extension to lean-slang — tracked as the next step.
+The 32-bit placeholder is gone. `core/LootCore/R128L.lean` is the Q64.64 r128
+multiply over **uint32 limbs** (no uint64; `mulhi` via a 16-bit split), proven
+equal to the `UInt64` `R128` (Plausible + 50,000 sweep), which is proven equal to
+the host `r128.c` (8,200 vectors x 7 ops). `adapters/r128-gpu/r128_mul.slang` is a
+1:1 transcription that lowers to SPIR-V; `adapters/r128-gpu` dispatches it on
+Vulkan via volk and checks against `r128.c`: **R128 GPU PARITY PASS on 4,096
+multiplies.** Host and GPU r128 agree bit-for-bit.

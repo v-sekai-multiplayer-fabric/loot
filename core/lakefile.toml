@@ -25,3 +25,7 @@ root = "Emit"
 [[lean_exe]]
 name = "r128_diff"
 root = "R128Diff"
+
+[[lean_exe]]
+name = "r128l_test"
+root = "R128LTest"

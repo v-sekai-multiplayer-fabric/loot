@@ -8,3 +8,8 @@ adapters/parity/kernel.spv
 
 adapters/r128-parity/r128.h
 adapters/r128-parity/r128_oracle
+
+adapters/r128-gpu/r128.h
+adapters/r128-gpu/r128_mul.spv
+adapters/r128-gpu/r128_gpu_parity
+adapters/r128-gpu/slang/

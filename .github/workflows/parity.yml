@@ -16,9 +16,9 @@ jobs:
       - name: slangc
         run: |
           SLANG=2026.10.2
+          mkdir -p "$HOME/slang"
           curl -fsSL "https://github.com/shader-slang/slang/releases/download/v${SLANG}/slang-${SLANG}-linux-x86_64-glibc-2.27.tar.gz" | tar -xz -C "$HOME/slang"
           echo "$HOME/slang/bin" >> "$GITHUB_PATH"
-        # mkdir first
       - name: Build core, emit kernel + golden
         working-directory: core
         run: |

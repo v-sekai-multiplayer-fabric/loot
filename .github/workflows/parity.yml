@@ -1,0 +1,57 @@
+name: Parity
+
+on: [push, pull_request]
+
+jobs:
+  linux-lavapipe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lean (elan)
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain stable
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Software Vulkan + tools
+        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers libvulkan1 vulkan-tools gcc curl git
+      - name: slangc
+        run: |
+          SLANG=2026.10.2
+          curl -fsSL "https://github.com/shader-slang/slang/releases/download/v${SLANG}/slang-${SLANG}-linux-x86_64-glibc-2.27.tar.gz" | tar -xz -C "$HOME/slang"
+          echo "$HOME/slang/bin" >> "$GITHUB_PATH"
+        # mkdir first
+      - name: Build core, emit kernel + golden
+        working-directory: core
+        run: |
+          lake build
+          lake exe loot_demo
+          lake exe loot_emit
+      - name: Compile kernel to SPIR-V
+        run: slangc core/build/kernel.slang -target spirv -profile glsl_450 -entry main -stage compute -o kernel.spv
+      - name: Build + run parity runner
+        run: |
+          ( cd adapters/parity && ./build.sh )
+          ./adapters/parity/parity_runner kernel.spv core/build/golden.csv
+
+  macos-moltenvk:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lean (elan)
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain stable
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Vulkan SDK (MoltenVK) + slang
+        run: |
+          brew install --cask vulkan-sdk || brew install molten-vk vulkan-loader vulkan-tools
+          brew install shader-slang || true
+      - name: Build core, emit kernel + golden
+        working-directory: core
+        run: |
+          lake build
+          lake exe loot_emit
+      - name: Compile kernel to SPIR-V
+        run: slangc core/build/kernel.slang -target spirv -profile glsl_450 -entry main -stage compute -o kernel.spv
+      - name: Build + run parity runner (MoltenVK)
+        run: |
+          ( cd adapters/parity && ./build.sh )
+          ./adapters/parity/parity_runner kernel.spv core/build/golden.csv

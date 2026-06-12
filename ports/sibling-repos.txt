@@ -1,0 +1,4 @@
+# loot hexagon wiring (driving -> this core -> driven)
+combat       enemy-death loot trigger        -> loot_request_source
+progression  inventory delta to persist      <- inventory_delta_sink
+# grant_sink replies to whichever client adapter (http3 / webtransportd) asked.

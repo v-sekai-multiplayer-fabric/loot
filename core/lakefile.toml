@@ -1,0 +1,23 @@
+name = "loot_core"
+defaultTargets = ["LootCore"]
+
+[[require]]
+name = "Plausible"
+git = "https://github.com/leanprover-community/plausible"
+rev = "v4.30.0"
+
+[[require]]
+name = "LeanSlang"
+git = "https://github.com/V-Sekai-fire/lean-slang"
+rev = "main"
+
+[[lean_lib]]
+name = "LootCore"
+
+[[lean_exe]]
+name = "loot_demo"
+root = "Main"
+
+[[lean_exe]]
+name = "loot_emit"
+root = "Emit"

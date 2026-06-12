@@ -1,0 +1,7 @@
+core/.lake/
+core/build/
+adapters/parity/vh/
+adapters/parity/volk.*
+adapters/parity/parity_runner
+adapters/parity/kernel.spv
+.venv/

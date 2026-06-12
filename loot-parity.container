@@ -1,0 +1,13 @@
+[Unit]
+Description=Loot SPIR-V parity (lavapipe)
+
+[Container]
+Image=localhost/loot-parity
+# Software Vulkan (lavapipe); no GPU device passthrough needed.
+# For the local RTX 4090 instead, add: AddDevice=/dev/dri
+
+[Service]
+Type=oneshot
+
+[Install]
+WantedBy=default.target

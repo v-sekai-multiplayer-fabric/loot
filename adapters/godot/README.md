@@ -22,3 +22,20 @@ $GODOT --headless --script loot_client.gd
 Verified with Godot 4.7.beta double (merged `multiplayer-fabric` assembly): the
 transport echo demo passes, OpenXR initializes against headless Monado, and the
 loot rolls match the Lean core bit-for-bit across the wire.
+
+## Four-player contention
+
+`contention_server.gd` + `contention_client.gd`: four concurrent client
+processes send their receipt timestamps per round over QUIC; the single
+authority resolves first-touch contention with the `LootCore.resolve` algorithm
+and its resolutions match `contention_golden.csv` (emitted by the Lean core and
+pinned by the Plausible four-player property: exactly one winner, earliest
+receipt, ties to the lowest requester id).
+
+Verified: FOUR-PLAYER CONTENTION PASS, 64 rounds, 4 concurrent clients.
+
+Engine findings filed from this smoke (the `feat/module-http3` listener):
+one server listener per process; with multiple sessions on one listener,
+incoming datagrams multiplex correctly but replies route to a single session,
+and session teardown hits a double free. The smoke verifies the authority's
+resolutions at the harness until the reply path lands.

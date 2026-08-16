@@ -59,6 +59,25 @@ int main(int argc, char **argv) {
   CK(volkInitialize());
   VkApplicationInfo app = { .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO, .apiVersion = VK_API_VERSION_1_1 };
   VkInstanceCreateInfo ici = { .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, .pApplicationInfo = &app };
+
+  // MoltenVK sets is_portability_driver in its ICD, and the loader hides such a
+  // driver unless the instance opts in. Without this, vkCreateInstance returns
+  // VK_ERROR_INCOMPATIBLE_DRIVER on macOS. Ask only when the extension is really
+  // advertised, so lavapipe, which does not have it, creates the same instance it
+  // always did.
+  const char *portabilityExt = "VK_KHR_portability_enumeration";
+  uint32_t nInstExt = 0; vkEnumerateInstanceExtensionProperties(NULL, &nInstExt, NULL);
+  VkExtensionProperties *instExt = malloc(nInstExt * sizeof *instExt);
+  vkEnumerateInstanceExtensionProperties(NULL, &nInstExt, instExt);
+  for (uint32_t i = 0; i < nInstExt; i++)
+    if (!strcmp(instExt[i].extensionName, portabilityExt)) {
+      ici.flags |= 0x00000001; // VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
+      ici.enabledExtensionCount = 1;
+      ici.ppEnabledExtensionNames = &portabilityExt;
+      break;
+    }
+  free(instExt);
+
   VkInstance inst; CK(vkCreateInstance(&ici, NULL, &inst));
   volkLoadInstance(inst);
 
@@ -78,6 +97,21 @@ int main(int argc, char **argv) {
   float prio = 1.0f;
   VkDeviceQueueCreateInfo qci = { .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, .queueFamilyIndex = qfi, .queueCount = 1, .pQueuePriorities = &prio };
   VkDeviceCreateInfo dci = { .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, .queueCreateInfoCount = 1, .pQueueCreateInfos = &qci };
+
+  // A portability physical device requires VK_KHR_portability_subset on the device
+  // it creates. Same rule as above: enable it only where it is advertised.
+  const char *subsetExt = "VK_KHR_portability_subset";
+  uint32_t nDevExt = 0; vkEnumerateDeviceExtensionProperties(phys, NULL, &nDevExt, NULL);
+  VkExtensionProperties *devExt = malloc(nDevExt * sizeof *devExt);
+  vkEnumerateDeviceExtensionProperties(phys, NULL, &nDevExt, devExt);
+  for (uint32_t i = 0; i < nDevExt; i++)
+    if (!strcmp(devExt[i].extensionName, subsetExt)) {
+      dci.enabledExtensionCount = 1;
+      dci.ppEnabledExtensionNames = &subsetExt;
+      break;
+    }
+  free(devExt);
+
   CK(vkCreateDevice(phys, &dci, NULL, &dev));
   volkLoadDevice(dev);
   VkQueue queue; vkGetDeviceQueue(dev, qfi, 0, &queue);

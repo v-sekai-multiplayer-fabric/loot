@@ -40,8 +40,21 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain stable
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Vulkan SDK (MoltenVK)
-        run: brew install --cask vulkan-sdk || brew install molten-vk vulkan-loader vulkan-tools
+      # There is no vulkan-sdk cask; `brew install --cask vulkan-sdk` warned "No Cask
+      # with this name exists" and fell through to the formulae every run. Install
+      # them directly and let a real failure fail.
+      #
+      # volk dlopen()s "libvulkan.dylib" by bare name, and Homebrew puts it under
+      # $(brew --prefix)/lib, which dyld does not search — volkInitialize returned
+      # VK_ERROR_INITIALIZATION_FAILED. DYLD_LIBRARY_PATH does not fix it, because SIP
+      # strips DYLD_* when it launches the protected /bin/bash each step runs in.
+      # /usr/local/lib is in dyld's default fallback search and is not protected.
+      - name: Vulkan loader + MoltenVK
+        run: |
+          brew install molten-vk vulkan-loader vulkan-tools
+          sudo mkdir -p /usr/local/lib
+          sudo ln -sf "$(brew --prefix)/lib/libvulkan.dylib" /usr/local/lib/libvulkan.dylib
+          ls -l /usr/local/lib/libvulkan.dylib
       # Homebrew has no shader-slang formula, so `brew install shader-slang || true`
       # installed nothing and reported success. The failure surfaced two steps later
       # as `slangc: command not found`, exit 127. This takes the release tarball, the

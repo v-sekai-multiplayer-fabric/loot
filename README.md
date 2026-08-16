@@ -5,7 +5,7 @@ that rolls drops from a seeded weighted table and resolves first-touch contentio
 behind narrow ports, with adapters that bind the engine, the wire, and a recorded
 fixture.
 
-It follows the V-Sekai `core/` + `ports/` + `adapters/` triad
+It follows the V-Sekai `core/` + `repository/` + `adapters/` triad
 ([hexagonal decision](https://v-sekai-multiplayer-fabric.github.io/manuals/decisions/20260610-hexagonal-core-ports-adapters.html))
 and the [loot hexagon decision](https://v-sekai-multiplayer-fabric.github.io/manuals/decisions/20260611-hexagon-loot-core.html).
 
@@ -13,7 +13,7 @@ and the [loot hexagon decision](https://v-sekai-multiplayer-fabric.github.io/man
 
 ```
 core/        Lean domain logic + lean-slang codegen (the dependency-free core)
-ports/       header-only C vtables: *_source (driving) / *_sink (driven)
+repository/  header-only C vtables: *_source (driving) / *_sink (driven)
 adapters/    parity (SPIR-V vs golden) and fixture (recorded vectors)
 ```
 

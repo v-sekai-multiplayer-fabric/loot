@@ -40,10 +40,23 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain stable
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Vulkan SDK (MoltenVK) + slang
+      - name: Vulkan SDK (MoltenVK)
+        run: brew install --cask vulkan-sdk || brew install molten-vk vulkan-loader vulkan-tools
+      # Homebrew has no shader-slang formula, so `brew install shader-slang || true`
+      # installed nothing and reported success. The failure surfaced two steps later
+      # as `slangc: command not found`, exit 127. This takes the release tarball, the
+      # same way the linux job does, and fails here if the download fails.
+      - name: slangc
         run: |
-          brew install --cask vulkan-sdk || brew install molten-vk vulkan-loader vulkan-tools
-          brew install shader-slang || true
+          SLANG=2026.10.2
+          case "$(uname -m)" in
+            arm64|aarch64) ARCH=aarch64 ;;
+            *)             ARCH=x86_64  ;;
+          esac
+          mkdir -p "$HOME/slang"
+          curl -fsSL "https://github.com/shader-slang/slang/releases/download/v${SLANG}/slang-${SLANG}-macos-${ARCH}.tar.gz" | tar -xz -C "$HOME/slang"
+          echo "$HOME/slang/bin" >> "$GITHUB_PATH"
+          "$HOME/slang/bin/slangc" -v
       - name: Build core, emit kernel + golden
         working-directory: core
         run: |
